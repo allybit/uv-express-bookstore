@@ -1,4 +1,6 @@
 <?php include 'admin/db_connect.php' ?>
+<?php include 'functions.php'; // Include the logAuditTrail function ?>
+
 <style type="text/css">
 	.img-field{
 		width: calc(25%);
@@ -101,6 +103,16 @@
                 		input.val(qty).trigger('change')
                 		calc()
             			end_load()
+                        // Log the cart update action
+                        $.ajax({
+                            url: 'admin/ajax.php?action=log_action',
+                            method: 'POST',
+                            data: {
+                                user_id: <?php echo $_SESSION['login_id']; ?>,
+                                action: 'update_cart',
+                                details: 'Item ID: ' + id + ', New Quantity: ' + qty
+                            }
+                        });
             		}
             	}
             })
@@ -120,6 +132,16 @@
             		input.val(qty).trigger('change')
             		calc()
         			end_load()
+                    // Log the cart update action
+                    $.ajax({
+                        url: 'admin/ajax.php?action=log_action',
+                        method: 'POST',
+                        data: {
+                            user_id: <?php echo $_SESSION['login_id']; ?>,
+                            action: 'update_cart',
+                            details: 'Item ID: ' + id + ', New Quantity: ' + qty
+                        }
+                    });
         		}
         	}
         })
@@ -153,11 +175,31 @@
         		if(resp == 1){
             		alert_toast("Item removed from cart","success");
         			setTimeout(function(){ location.reload() },750)
+                    // Log the cart removal action
+                    $.ajax({
+                        url: 'admin/ajax.php?action=log_action',
+                        method: 'POST',
+                        data: {
+                            user_id: <?php echo $_SESSION['login_id']; ?>,
+                            action: 'remove_from_cart',
+                            details: 'Item ID: ' + $id
+                        }
+                    });
         		}
         	}
         })
      }
      $('#checkout').click(function(){
-     	uni_modal('Chechkout',"manage_order.php");
+     	uni_modal('Checkout',"manage_order.php");
+        // Log the checkout action
+        $.ajax({
+            url: 'admin/ajax.php?action=log_action',
+            method: 'POST',
+            data: {
+                user_id: <?php echo $_SESSION['login_id']; ?>,
+                action: 'checkout',
+                details: 'Total Amount: <?php echo number_format($total, 2); ?>'
+            }
+        });
      })
 </script>

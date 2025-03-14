@@ -136,5 +136,7 @@ if($action == "delete_order"){
 	if($delsete)
 		echo $delsete;
 }
+
+
 ob_end_flush();
 ?>
