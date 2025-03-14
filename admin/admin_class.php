@@ -1,5 +1,4 @@
 <?php
-session_start();
 ini_set('display_errors', 1);
 Class Action {
 	private $db;
@@ -28,18 +27,21 @@ Class Action {
 			return 3;
 		}
 	}
-	function login2(){
-		
-		extract($_POST);		
-		$qry = $this->db->query("SELECT * FROM customers where email = '".$email."' and password = '".md5($password)."' ");
-		if($qry->num_rows > 0){
-			foreach ($qry->fetch_array() as $key => $value) {
-				if($key != 'passwors' && !is_numeric($key))
-					$_SESSION['login_'.$key] = $value;
+	public function login2() {
+		extract($_POST);
+		$email = $this->db->real_escape_string($email);
+		$qry = $this->db->query("SELECT * FROM customers WHERE email = '$email'");
+	
+		if ($qry->num_rows > 0) {
+			$row = $qry->fetch_assoc();
+			if (password_verify($password, $row['password'])) {
+				$_SESSION['login_id'] = $row['id'];
+				return 1; // Success
+			} else {
+				return 0; // Incorrect password
 			}
-				return 1;
-		}else{
-			return 3;
+		} else {
+			return 0; // User not found
 		}
 	}
 	function logout(){
@@ -84,37 +86,22 @@ Class Action {
 		if($delete)
 			return 1;
 	}
-	function signup(){
+	public function signup() {
 		extract($_POST);
-		$data = " name = '$name' ";
-		$data .= ", email = '$email' ";
-		$data .= ", address = '$address' ";
-		$data .= ", contact = '$contact' ";
-		$data .= ", password = '".md5($password)."' ";
-		$chk   = $this->db->query("SELECT * from customers where email ='$email' ".(!empty($id) ? " and id != '$id' " : ''))->num_rows;
-		if($chk > 0){
-			return 3;
-			exit;
-		}
-		if(empty($id))
-			$save = $this->db->query("INSERT INTO customers set $data");
-		else
-			$save = $this->db->query("UPDATE customers set $data where id=$id ");
-		if($save){
-			if(empty($id))
-				$id = $this->db->insert_id;
-				$qry = $this->db->query("SELECT * FROM customers where id = $id ");
-				if($qry->num_rows > 0){
-					foreach ($qry->fetch_array() as $key => $value) {
-						if($key != 'password' && !is_numeric($key))
-							$_SESSION['login_'.$key] = $value;
-					}
-						return 1;
-				}else{
-					return 3;
-				}
+		$password = password_hash($password, PASSWORD_DEFAULT); // Hash the password
+		$email = $this->db->real_escape_string($email); // Sanitize email input
+		$name = $this->db->real_escape_string($name); // Sanitize name input
+		$contact = $this->db->real_escape_string($contact); // Sanitize contact input
+		$address = $this->db->real_escape_string($address); // Sanitize address input
+
+		$qry = $this->db->query("INSERT INTO customers (name, contact, address, email, password) VALUES ('$name', '$contact', '$address', '$email', '$password')");
+		if ($qry) {
+			return 1; // Success
+		} else {
+			return 0; // Error
 		}
 	}
+
 	function update_account(){
 		extract($_POST);
 		$data = " name = '".$firstname.' '.$lastname."' ";

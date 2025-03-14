@@ -1,12 +1,29 @@
 <?php
 ob_start();
+session_start();
 $action = $_GET['action'];
 include 'admin_class.php';
 $crud = new Action();
-if($action == 'login'){
-	$login = $crud->login();
-	if($login)
-		echo $login;
+
+function login2() {
+    extract($_POST);
+    $email = $this->db->real_escape_string($email);
+    $qry = $this->db->query("SELECT * FROM customers WHERE email = '$email'");
+
+    if ($qry->num_rows > 0) {
+        $row = $qry->fetch_assoc();
+        if (password_verify($password, $row['password'])) {
+            $_SESSION['login_id'] = $row['id']; // Set session
+            error_log("Session set for user ID: " . $row['id']); // Debugging
+            return 1; // Success
+        } else {
+            error_log("Password verification failed for email: " . $email); // Debugging
+            return 0; // Incorrect password
+        }
+    } else {
+        error_log("User not found for email: " . $email); // Debugging
+        return 0; // User not found
+    }
 }
 if($action == 'login2'){
 	$login = $crud->login2();
